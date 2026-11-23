@@ -8,6 +8,7 @@
 #   scripts/               helper executables, macros and grid scripts
 #   fcl/                   PRISM FHiCL configuration (installed to fcl/PRISM)
 #   flux/, FileExposures/  input data files
+#   GeoEff/                ND geometric efficiency (own CMakeLists, also builds standalone)
 ################################################################################
 
 set(PRISM_implementation_files

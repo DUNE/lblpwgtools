@@ -1,3 +1,8 @@
+> [!NOTE]
+> This documentation was written for the standalone DUNE_ND_GeoEff repository. The code now lives in
+> `lblpwgtools/CAFAna/PRISM/GeoEff`; paths such as `app/`, `include/`, `src/`, `macros/` and `data/` are relative to that directory.
+> Build and run instructions are in [../README.md](../README.md).
+
 # This folder contains all the necessary documentation for the geometric efficiency of FD Events at the ND 
 
 The code as it is right now is taking events from the FD (information from the FD events is saved in FD ntuples - 
@@ -60,7 +65,7 @@ In principle the working steps are the following:
 More details about each individual steps: 
 ## 1. Hadron Geometric efficiency of FD events at the ND
 
-The code for this step can be found on the ```master``` branch of this repository: https://github.com/icaracas/DUNE_ND_GeoEff/
+The code for this step is in `lblpwgtools/CAFAna/PRISM/GeoEff` (originally the ```master``` branch of https://github.com/icaracas/DUNE_ND_GeoEff/).
 
   - the main code of interest is in ```app/runGeoEffFDEvtSim.cpp```
   
@@ -170,7 +175,7 @@ More variables (than the ones enumerated here) are written in the output file, b
 
 ## 2. Muon Geometric efficiency of FD events at the ND
 
-The code for this step can be found on the ```MuonCode``` branch of this repository: https://github.com/icaracas/DUNE_ND_GeoEff/
+The code for this step is in `lblpwgtools/CAFAna/PRISM/GeoEff` (originally the ```MuonCode``` branch of https://github.com/icaracas/DUNE_ND_GeoEff/).
   
   - the main code of interest is in ```app/make_tree_fd.py```
 
@@ -284,7 +289,7 @@ As a result of running the muon efficiency part an output file, i.e `OutputMuonF
 
 ## 3.  Analyse the FD events selected at the ND 
 
-The code for this step can be found on the ```EtrimAnalysis``` branch of this repository: https://github.com/icaracas/DUNE_ND_GeoEff/ . 
+The code for this step is in `lblpwgtools/CAFAna/PRISM/GeoEff` (originally the ```EtrimAnalysis``` branch of https://github.com/icaracas/DUNE_ND_GeoEff/). 
 
 The 2 main files of interest are: ```app/NtupleOutVetoAndTrimE_AssumeEqualEffAtAllOA_NOOscSpectrumNOCAFAna_FDRateAtND.C``` and ```app/NtupleOutVetoAndTrimE_AssumeEqualEffAtAllOA_WithOscSpectrumNOCAFAna_FDRateAtND.C```
 The difference between those 2 files are whether one wants to work with the oscillated spectrum or with the non-oscillated one -- codes are very similar but will try to highlight the main differences below.
@@ -371,7 +376,7 @@ There are 2 possibilities of using such a function in the current code:
     ```bash
     double FDEventRateAtND_ETrue(FunctionCache& cache, double Etrue, double OAPos)
     ```
-    This function is reading the values of the FDEventRateAtND function for different true neutrino energy bins (or ranges) from an output file called `Splines_FDEventRateAtND_ETrue.root`. This root file can be found on the `EtrimAnalysis` branch of this reposiotory, where the file `EffFitFunctionCorrectEbinningSelectedEventsSplineETrue.C` to create this function is also located. The `Splines_FDEventRateAtND_ETrue.root` gives the value of this probability over the entire off-axis range of interest for fixed true neutrino energy bins. The bin edges corresponding to these bins, `kTrueEBinEdges` are also saved in the file (i.e `f_norm_etrue1` is the proability of FD event rate at the ND for neutrino energy ranging from bin edge0 to bin edge 1 etc)
+    This function is reading the values of the FDEventRateAtND function for different true neutrino energy bins (or ranges) from an output file called `Splines_FDEventRateAtND_ETrue.root`. This root file is in `data/step3/`; it is created by `macros/step3_etrim/EffFitFunctionCorrectEbinningSelectedEventsSplineETrue.C`. The `Splines_FDEventRateAtND_ETrue.root` gives the value of this probability over the entire off-axis range of interest for fixed true neutrino energy bins. The bin edges corresponding to these bins, `kTrueEBinEdges` are also saved in the file (i.e `f_norm_etrue1` is the proability of FD event rate at the ND for neutrino energy ranging from bin edge0 to bin edge 1 etc)
 
     The function can further be used and called within the code as
     ```bash
@@ -392,7 +397,7 @@ There are 2 possibilities of using such a function in the current code:
     ```
     Since we use the ND selected events to obtain this FD Event Rate at the ND probability, and since we are interesed in how a given FD event would be seen by the ND, the `Ehad` used here should be the hadronic energy deposited inside the ND-LAr active volume -> so `Ehad` here is in fact our trimmed energy `Etrim`.
 
-    This function is reading the value of the FDEventRateAtND function for different - fixed `Ehad` and `Elep` bins over the entire off-axis range, from an ouput file called `Splines_FDEventRateAtND.root`. This root file can be found on the `EtrimAnalysis` branch of this reposiotory, where the file `EffFitFunctionCorrectEbinningSelectedEventsSplineEhadElep.C` to create this function is also located. The `Splines_FDEventRateAtND.root` gives the value of this probability over the entire off-axis range of interest for a fixed hadron energy and lepton energy bin. The bin edges corresponding to these bins, `kHadBinEdges` and `kLepBinEdges` are also saved in the file (i.e `f_norm_lep1_had1` is the proability of FD event rate at the ND for an event with hadronic energy ranging from bin HadBinEdge0 to bin HadBinEdge1 and a muon energy ranging from LepBinEdge0 to LepBinEdge1.. etc)
+    This function is reading the value of the FDEventRateAtND function for different - fixed `Ehad` and `Elep` bins over the entire off-axis range, from an ouput file called `Splines_FDEventRateAtND.root`. This root file is in `data/step3/`; it is created by `macros/step3_etrim/EffFitFunctionCorrectEbinningSelectedEventsSplineEhadElep.C`. The `Splines_FDEventRateAtND.root` gives the value of this probability over the entire off-axis range of interest for a fixed hadron energy and lepton energy bin. The bin edges corresponding to these bins, `kHadBinEdges` and `kLepBinEdges` are also saved in the file (i.e `f_norm_lep1_had1` is the proability of FD event rate at the ND for an event with hadronic energy ranging from bin HadBinEdge0 to bin HadBinEdge1 and a muon energy ranging from LepBinEdge0 to LepBinEdge1.. etc)
 
     The function can further be used and called within the code as
     ```bash
@@ -564,11 +569,11 @@ The oscillation probability is applied only at this stage - i.e stage 3 of the a
 
 Specific headers used in the *with oscillations* code are:
 ```bash
-#include "Calcs.h"
+#include "CAFAna/Analysis/Calcs.h"
 #include "OscLib/OscCalcPMNSOpt.h"
 ```
-  - the oscillation object, `IOscCalc` is the same as used within CAFAna and is defined in the code as `osc::IOscCalc* calc = ana::DefaultOscCalc();` -> you can check `Calcs.cxx` for the default oscillation parameters values.
-  - you can also change the oscillation parameters by using the `calc->SetTh23()` function for theta23 parameters etc. -- functions also defined in `Calcs.cxx`
+  - the oscillation object, `IOscCalc` is the same as used within CAFAna and is defined in the code as `osc::IOscCalc* calc = ana::DefaultOscCalc();` -> you can check `lblpwgtools/CAFAna/Analysis/Calcs.cxx` (the same file used by CAFAna/PRISM) for the default oscillation parameters values.
+  - you can also change the oscillation parameters by using the `calc->SetTh23()` function for theta23 parameters etc. -- functions also defined in `lblpwgtools/CAFAna/Analysis/Calcs.cxx`
 
 
 The oscillation itself is done by applying the **oscillation probability** to the FD events:
@@ -592,7 +597,7 @@ NOTE: always make sure to use the same oscillation parameters in the geometric e
 
 ## 4. Obtain the distribution of ALL FD events, as seen (geo eff corrected for) by the ND
 
-To sum up the results of all FD events (from all FD ntuples), you can use the `SumEtrimHistos.C` code, which can be found  on the ```EtrimAnalysis``` branch of this repository: https://github.com/icaracas/DUNE_ND_GeoEff/ . To run this code do:
+To sum up the results of all FD events (from all FD ntuples), you can use the `macros/step3_etrim/SumEtrimHistos.C` code. To run this code do:
 ```bash
 SumEtrimHistos("/pnfs/dune/scratch/users/icaracas/EtrimAnalysis_FromFDGeoEffinND/CombinedEffWithCAFLikeMuCuts/AllOAPosEtrueProb/OscSpectrumNonNegativeEvRateVals", {"hist_visEnuFDEnergy", "hist_EnuFDEnergy","Oschist_EnuFDEnergy", "LepMomTot", "hist_FDTotEnergy", "hist_muEdep", "hist_muTrackLength", "AllThrownEventsVsOAPosVsTotalETrim_FDEvt_", "SelectedEventsTwoDHisto_FDEvt_"}
 ```
@@ -616,7 +621,7 @@ If everything works well in the analysis, then **the spectrum of the FD events t
 
 NOTE: in the ND case we apply the off-axis coefficients to reproduce a desired *oscillated* or *non-oscillated* FD spectrum. In the case of the FD events translated to the ND, these are events already taken from the FD *oscillated* or *non-oscillated* spectrum, which is why applying the linear combination coefficients to these events is not correct (we already account for how often 1FD event appears in the ND for different ND positions by using the FD events rate function. Already discussed this in more details above). Howevere this is why it is important to make sure the same oscillation parameters are used in both cases of interest. This is why it's also always good to save the FD true neutrino spectrum (oscillated or non-oscillated) and further compare it with the true neutrino energy spectrum obtained from CAFAna-PRISM stage.  
 
-The code that does this comparison, using the end results obtained from the analysis so far, `PlotAllOAPosWithCAFLikeCutClean.C` , can be found on the `EtrimAnalysis` brach of this repository: https://github.com/icaracas/DUNE_ND_GeoEff/. The code uses 2 input files:
+The code that does this comparison, using the end results obtained from the analysis so far, `macros/step3_etrim/PlotAllOAPosWithCAFLikeCutClean.C`. The code uses 2 input files:
 
 1. The file obtained using the standard ND-CAFs, `PRISMPred_ERecFromDepWithNeutronEnergyAndTrueEmu_NoSysts_NoOsc_FlatRunPlan_AllOAPos_correcPerFileWeight_NDEffVsEreco.root`
 respectively PUT THE NAME OF WITH OSCILLATIONS THE FILE HERE) for the "oscillated" case comparison.
@@ -643,7 +648,7 @@ The most important histograms read and used from this file are:
    - `AllGenEvGeoEffTrueE` this is the FD spectrum, in true neutrino energy, from which we take the events and put them in the ND.
      
 NOTE: you should also make sure the same oscillation parameters have been used both in PRISMPred and in the Geometric Efficiency case (remember you set
-the oscillation parameters via Calcs.cxx in the Geo Efficiency case , and you can set the oscillation parameters value in the PRISMPredGrid.fcl
+the oscillation parameters via `lblpwgtools/CAFAna/Analysis/Calcs.cxx` in the Geo Efficiency case , and you can set the oscillation parameters value in the PRISMPredGrid.fcl
 file for the PRISM case)
 
 The end goal of this code is to compare the distribution of ALL FD events as seen by the ND (hadron + muon geometrically corrected for),
@@ -670,4 +675,3 @@ The **Documentation** part itself ends here . Below I am giving just some ideas 
 
 
 
->>>>>>> Documentation

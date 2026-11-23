@@ -337,3 +337,14 @@ for dmsq32 with one job submitted for each fit point.
 
 If running a job for each fit-point there will be many output files. These can be added
 together using `hadd_fits`.
+
+## Geometric efficiency (GeoEff)
+
+`GeoEff/` contains the DUNE ND geometric-efficiency workflow (formerly the
+standalone DUNE_ND_GeoEff repository): FD events are translated to the ND, hadron
+and muon geometric efficiencies are computed, and the resulting Etrim
+distributions are compared with the PRISM linear combination. It is built
+together with CAFAna (`libgeoEff`, `runGeoEffFDEvtSim`, `NtupleOutVetoAndTrimE_*`),
+and can also be built standalone for grid jobs. See
+[GeoEff/README.md](GeoEff/README.md) for build/run instructions and
+[GeoEff/doc/README.md](GeoEff/doc/README.md) for the physics documentation.
