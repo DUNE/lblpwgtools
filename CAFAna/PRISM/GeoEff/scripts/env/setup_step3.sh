@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Step 3 environment: ROOT 6.28 + OscLib v00.27 (e26 qualifier).
-# Run from the repository root: source scripts/env/setup_step3.sh
+# Step 3 environment: ROOT 6.28 + OscLib v00.27 (e26 qualifier), for the
+# standalone GeoEff build (cmake -S . -B build from this directory).
+# Run from lblpwgtools/CAFAna/PRISM/GeoEff: source scripts/env/setup_step3.sh
 
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
 

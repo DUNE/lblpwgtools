@@ -1,3 +1,7 @@
+> [!NOTE]
+> Historical notes from the standalone DUNE_ND_GeoEff repository. Paths refer to
+> the old layout; the code now lives in `lblpwgtools/CAFAna/PRISM/GeoEff` (see `README.md` in this directory).
+
 > Paths in this document refer to the legacy `Grid/` layout. In the current layout the step 3 sources are under `app/`, headers under `include/`, macros under `macros/step3_etrim/`, input data under `data/step3/`, and these scripts under `scripts/grid/step3_etrim/`.
 
 # Instructions to Run EtrimAnalysis Interactively on Fermi Grid

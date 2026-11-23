@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Step 1 environment: CMake, GCC, Eigen, and ROOT 6.28.
+# Run from lblpwgtools/CAFAna/PRISM/GeoEff: source scripts/env/setup_step1.sh
+# (only needed for the standalone GeoEff build; a full CAFAna build uses
+# CAFAna/standalone_configure_and_build.sh -u and CAFAnaEnv.sh instead)
 # Override NDGEOEFF_PYTHON_VERSION if your DUNE release provides another Python 3.
 
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh

@@ -21,13 +21,13 @@ pwd
 # Copy the untarred folder and remove the CVMFS linked read-only version
 # because recompile need to modify files
 # which can't be done in the CVMFS read-only version
-#echo "git clone --recurse-submodules -b master https://github.com/icaracas/DUNE_ND_GeoEff.git "
-#git clone --recurse-submodules -b master https://github.com/icaracas/DUNE_ND_GeoEff.git
 # If no clone then copy tarball contents
 echo "Moving contents of tarball to: ${_CONDOR_JOB_IWD}"
 cp -r ${INPUT_TAR_DIR_LOCAL}/* ${_CONDOR_JOB_IWD}
-echo "cd ${_CONDOR_JOB_IWD}/DUNE_ND_GeoEff"
-cd ${_CONDOR_JOB_IWD}/DUNE_ND_GeoEff
+# The tarball contains lblpwgtools/CAFAna/PRISM/GeoEff (see README.md)
+export GEOEFF_DIR=${_CONDOR_JOB_IWD}/lblpwgtools/CAFAna/PRISM/GeoEff
+echo "cd ${GEOEFF_DIR}"
+cd ${GEOEFF_DIR}
 echo "source scripts/env/setup_step1.sh"
 source scripts/env/setup_step1.sh
 # 1️⃣ Point to the GCC 9.3 compiler explicitly
@@ -35,7 +35,8 @@ export CC=/cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10
 export CXX=/cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/bin/g++
 # 2️⃣ Optional: make sure this GCC is first in PATH
 export PATH=/cvmfs/larsoft.opensciencegrid.org/products/gcc/v9_3_0/Linux64bit+3.10-2.17/bin:$PATH
-echo "cmake -S . -B build -DCMAKE_CXX_STANDARD=17 -DPYTHON_EXECUTABLE:FILEPATH=`which python3`"
-cmake -S . -B build -DCMAKE_CXX_STANDARD=17 -DPYTHON_EXECUTABLE:FILEPATH=`which python3`
+# Standalone GeoEff build (no CAFAna needed); step 1 needs no OscLib
+echo "cmake -S . -B build -DGEOEFF_BUILD_STEP3_OSC=OFF"
+cmake -S . -B build -DGEOEFF_BUILD_STEP3_OSC=OFF
 echo "cmake --build build --target runGeoEffFDEvtSim -j"
 cmake --build build --target runGeoEffFDEvtSim -j

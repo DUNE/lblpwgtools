@@ -74,10 +74,12 @@ done
 echo "Got input file: $myinfile"
 
 # Run program
-echo "cd ${_CONDOR_JOB_IWD}/DUNE_ND_GeoEff/build/bin"
-cd ${_CONDOR_JOB_IWD}/DUNE_ND_GeoEff/build/bin
-echo "ls -l ${_CONDOR_JOB_IWD}/DUNE_ND_GeoEff/build/bin"
-ls -l ${_CONDOR_JOB_IWD}/DUNE_ND_GeoEff/build/bin
+# GEOEFF_DIR is exported by setupNDEff-grid.sh
+BIN=${GEOEFF_DIR}/build/bin
+echo "cd ${BIN}"
+cd ${BIN}
+echo "ls -l ${BIN}"
+ls -l ${BIN}
 echo "./runGeoEffFDEvtSim $myinfile"
 ./runGeoEffFDEvtSim $myinfile
 

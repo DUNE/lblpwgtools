@@ -3,7 +3,15 @@
 >[!WARNING]
 >This method may be subject to change depending on the current submission system.
 
-Either copy or `git clone` respository with the necessary code to be submitted.
+The code now lives in `lblpwgtools/CAFAna/PRISM/GeoEff`. Work from the directory
+that *contains* your `lblpwgtools` checkout, and copy the two grid scripts there:
+
+```bash
+cp lblpwgtools/CAFAna/PRISM/GeoEff/scripts/grid/step1_hadron/{setupNDEff-grid.sh,run_NDEff_autogrid.sh} .
+```
+
+The worker node builds only the GeoEff sub-project (standalone CMake build of
+`CAFAna/PRISM/GeoEff`), not the full CAFAna.
 
 Make `myFDntuples.txt` file with the inputs to be processed using:
 ```bash
@@ -24,11 +32,12 @@ mkdir /pnfs/dune/scratch/users/path/to/output
 Make tarball:
 
 ```bash
-tar -czvf NDEff.tar.gz DUNE_ND_GeoEff setupNDEff-grid.sh myFDntuples.txt
+tar -czvf NDEff.tar.gz --exclude='build*' --exclude='__pycache__' \
+  lblpwgtools/CAFAna/PRISM/GeoEff setupNDEff-grid.sh myFDntuples.txt
 ```
 
 >[!WARNING]
->This command assumes code is in `DUNE_ND_GeoEff` directory. 
+>This command assumes the code is in `lblpwgtools/CAFAna/PRISM/GeoEff` relative to the current directory. On the worker node `setupNDEff-grid.sh` builds it in `lblpwgtools/CAFAna/PRISM/GeoEff/build`.
 
 Also to note:
  - in `run_NDEff_autogrid.sh` the output directory is, `OUTDIR=/pnfs/dune/scratch/users/${GRID_USER}/FDGeoEffinND/NDFV400m` -> you might want to make your own named directory.

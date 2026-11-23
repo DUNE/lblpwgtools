@@ -1,3 +1,7 @@
+> [!NOTE]
+> Historical notes from the standalone DUNE_ND_GeoEff repository. Paths refer to
+> the old layout; the code now lives in `lblpwgtools/CAFAna/PRISM/GeoEff` (see `README.md` in this directory).
+
 > Paths in this document refer to the legacy `app/` layout. In the current layout the step 1 sources are under `app/`, headers under `include/`, macros under `macros/step1_hadron/`, and the CMake build outputs executables in `build/bin/`.
 
 # 🟢 How to Submit Jobs for the Geometric Efficiency

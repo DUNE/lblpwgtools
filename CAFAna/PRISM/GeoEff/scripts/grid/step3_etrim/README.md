@@ -1,5 +1,17 @@
 # Grid submissions on FNAL machines
 
+The code now lives in `lblpwgtools/CAFAna/PRISM/GeoEff`. Work from the directory
+that *contains* your `lblpwgtools` checkout, and copy the grid scripts there:
+
+```bash
+cp lblpwgtools/CAFAna/PRISM/GeoEff/scripts/grid/step3_etrim/*.sh .
+```
+
+The worker node builds only the GeoEff sub-project (standalone CMake build of
+`CAFAna/PRISM/GeoEff`). The oscillated apps take the default oscillation
+parameters from `lblpwgtools/CAFAna/Analysis/Calcs.cxx`, which is compiled
+directly, so those files have to be in the tarball too.
+
 Write input file paths into `.txt` files:
 
 ```bash 
@@ -10,11 +22,20 @@ ls -d "/pnfs/dune/persistent/users/path/to/muon/files"/* | sed "s\/pnfs\root://f
 Make tarballs:
 
 ```bash
-tar -czvf TarEtrimAnalysis.tar.gz DUNE_ND_GeoEff setupNDEff-grid.sh myOutputFDGeoEffHadron.txt myOutputFDGeoEffMu.txt
+tar -czvf TarEtrimAnalysis.tar.gz --exclude='build*' --exclude='__pycache__' \
+  lblpwgtools/CAFAna/PRISM/GeoEff \
+  lblpwgtools/CAFAna/Analysis/Calcs.h lblpwgtools/CAFAna/Analysis/Calcs.cxx \
+  lblpwgtools/CAFAna/Analysis/CalcsVars.h lblpwgtools/CAFAna/Core/OscCalcFwdDeclare.h \
+  setupNDEff-grid.sh myOutputFDGeoEffHadron.txt myOutputFDGeoEffMu.txt
 ```
 
 >[!WARNING]
->This command assumes code is in `DUNE_ND_GeoEff` directory. 
+>This command assumes the code is in `lblpwgtools/CAFAna/PRISM/GeoEff` relative to the current directory.
+
+>[!IMPORTANT]
+>The step 3 apps read `data/step3/*.root` (coefficients, splines) relative to
+>`CAFAna/PRISM/GeoEff`. These ROOT files are ignored by git (`CAFAna/.gitignore`),
+>so make sure they are present in your working copy before making the tarball.
 
 Submit jobs:
 
@@ -33,7 +54,7 @@ jobsub_submit -G dune -N 9055 --memory=8GB --disk=1GB --expected-lifetime=3h --c
 
 >[!CAUTION] 
 >Modify paths in submission command!
->Modify output path in `run_NDcomEff.sh`!
+>Modify the output path (`OUTDIR`) in the `run_NDEff_autogrid*.sh` script you submit!
 
 
 Eventually move output to more permanent location:
@@ -46,9 +67,9 @@ cp /pnfs/dune/scratch/users/amunoz1/test/FDGeoEffinND/Etrim/NoOsc/* /pnfs/dune/p
 Sum Etrim histos, when you have multiple output files from the previous step:
 
 ```bash
-root -q 'SumEtrimHistos.C("/pnfs/dune/persistent/users/path/to/outputs/",{"hist_visEnuFDEnergy", "hist_EnuFDEnergy", "Oschist_EnuFDEnergy", "LepMomTot","hist_FDTotEnergy","hist_muEdep","hist_muTrackLength","AllThrownEventsVsOAPosVsTotalETrim_FDEvt_","SelectedEventsTwoDHisto_FDEvt_"})'
+root -q 'lblpwgtools/CAFAna/PRISM/GeoEff/macros/step3_etrim/SumEtrimHistos.C("/pnfs/dune/persistent/users/path/to/outputs/",{"hist_visEnuFDEnergy", "hist_EnuFDEnergy", "Oschist_EnuFDEnergy", "LepMomTot","hist_FDTotEnergy","hist_muEdep","hist_muTrackLength","AllThrownEventsVsOAPosVsTotalETrim_FDEvt_","SelectedEventsTwoDHisto_FDEvt_"})'
 ```
 
 ## Comparison PRISM prediction
 
-Use the code `macros/step3_etrim/PlotAllOAPosWithCAFLikeCutClean.C` to plot the comparison plots between geometric efficiency method and the standard PRISM prediction. The file containing the standard prediction is `data/step3/PRISMPred_ERecFromDepWithNeutronEnergyAndTrueEmu_NoSysts_NoOsc_FlatRunPlan_AllOAPos_correcPerFileWeight_NDEffVsEreco.root`. 
+Use the code `CAFAna/PRISM/GeoEff/macros/step3_etrim/PlotAllOAPosWithCAFLikeCutClean.C` to plot the comparison plots between geometric efficiency method and the standard PRISM prediction. The file containing the standard prediction is `CAFAna/PRISM/GeoEff/data/step3/PRISMPred_ERecFromDepWithNeutronEnergyAndTrueEmu_NoSysts_NoOsc_FlatRunPlan_AllOAPos_correcPerFileWeight_NDEffVsEreco.root`. 

@@ -1,3 +1,7 @@
+> [!NOTE]
+> Historical notes from the standalone DUNE_ND_GeoEff repository. Paths refer to
+> the old layout; the code now lives in `lblpwgtools/CAFAna/PRISM/GeoEff` (see `README.md` in this directory).
+
 > Paths in this document refer to the legacy `code/` layout. In the current layout the Python code is in the flat `app/` package, the model asset is `app/assets/muonEff30.nn`, macros are under `macros/step2_muon/`, and these scripts are under `scripts/grid/step2_muon/`.
 
 # Run Muon Efficiency code interactively on Fermi Grid (Ioana README)

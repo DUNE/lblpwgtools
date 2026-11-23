@@ -81,7 +81,9 @@ echo "Got input file hadron: $myinfilehadron"
 echo "Got input file mu: $myinfilemu"
 
 # Run program
-REPO=${_CONDOR_JOB_IWD}/DUNE_ND_GeoEff
+# GEOEFF_DIR is exported by setupNDEff-grid.sh; the step 3 apps read
+# data/step3/... relative to it, so stay in that directory.
+REPO=${GEOEFF_DIR}
 BIN=${REPO}/build/bin
 #echo "cd ${REPO}/data/step3"
 #cd ${REPO}/data/step3

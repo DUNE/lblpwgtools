@@ -17,11 +17,13 @@ Where this command changes the path so that the worker node can access the files
 Make tarball:
 
 ```bash
-tar -czvf FD_work.tar.gz setup_FDcombEff.sh app FDCAFs.txt
+cp lblpwgtools/CAFAna/PRISM/GeoEff/scripts/grid/step2_muon/{setup_FDcombEff.sh,run_FDcombEff.sh} .
+tar -czvf FD_work.tar.gz --exclude='__pycache__' setup_FDcombEff.sh FDCAFs.txt \
+  -C lblpwgtools/CAFAna/PRISM/GeoEff app
 ```
 
 >[!NOTE]
->Copy the flat `app/` directory from the cloned repository into the tarball working directory.
+>The `-C` puts the flat `app/` directory of `lblpwgtools/CAFAna/PRISM/GeoEff` at the top level of the tarball, which is where `run_FDcombEff.sh` expects it (`${INPUT_TAR_DIR_LOCAL}/app/`). Run the command from the directory that contains your `lblpwgtools` checkout.
 
 Submit jobs:
 ```bash

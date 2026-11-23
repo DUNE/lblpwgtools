@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Step 2 environment: ROOT 6.28 + Python 3 for the muon/combined efficiency.
-# Run from the repository root: source scripts/env/setup_step2.sh
+# Run from lblpwgtools/CAFAna/PRISM/GeoEff: source scripts/env/setup_step2.sh
 
 source /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
 
