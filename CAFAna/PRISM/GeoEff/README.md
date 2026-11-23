@@ -214,7 +214,7 @@ bash scripts/grid/make_bundle.sh step3 TarEtrimAnalysis.tar.gz myOutputFDGeoEffH
 | Step | Bundle contents |
 |---|---|
 | 1 | `bin/runGeoEffFDEvtSim`, `lib/libgeoEff.so`, input list |
-| 2 | `app/*.py`, `app/assets/`, optionally a preinstalled CPU-torch `python_env/`, input list |
+| 2 | `app/*.py`, `app/assets/`, input list; the Python env goes in a separate, reusable `GeoEffPyEnv.tar.gz` (`make_bundle.sh pyenv`, passed as a second `--tar_file_name`) |
 | 3 | `bin/NtupleOutVetoAndTrimE_*`, the `data/step3` files the apps open, input lists |
 
 Each bundle also contains that step's `scripts/env/setup_stepN.sh` and

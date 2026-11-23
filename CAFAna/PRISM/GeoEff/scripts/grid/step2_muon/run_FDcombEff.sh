@@ -14,6 +14,8 @@ SETUP_SCRIPT=${BUNDLE_DIR}/scripts/grid/step2_muon/setup_FDcombEff.sh
 
 if [ ! -e "${SETUP_SCRIPT}" ]; then
   echo "Error, setup script not found: ${SETUP_SCRIPT}"
+  echo "The step 2 code bundle (FD_work.tar.gz) must be the FIRST --tar_file_name;"
+  echo "the Python env tarball (GeoEffPyEnv.tar.gz), if used, goes after it."
   exit 1
 fi
 echo "Start to run . ${SETUP_SCRIPT}"

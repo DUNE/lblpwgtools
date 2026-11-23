@@ -16,7 +16,25 @@ if [ -n "${NDGEOEFF_PYTHON_ENV:-}" ]; then
     exit 1
   fi
   _PYTHON_ENV_DIR="${NDGEOEFF_PYTHON_ENV}"
-elif [ -d "${BUNDLE_ROOT}/python_env" ]; then
+fi
+
+# Separate Python env tarball (make_bundle.sh pyenv), passed as an extra
+# --tar_file_name. jobsub unpacks tarball N to $INPUT_TAR_DIR_LOCAL (first) or
+# $INPUT_TAR_DIR_LOCAL_N; scan all of them so the order does not matter.
+if [ -z "${_PYTHON_ENV_DIR}" ]; then
+  for _tarvar in ${!INPUT_TAR_DIR_LOCAL*}; do
+    _tardir="${!_tarvar}"
+    if [ -n "${_tardir}" ] && [ -f "${_tardir}/GeoEffPyEnv/GEOEFF_PYENV" ]; then
+      _PYTHON_ENV_DIR="${_tardir}/GeoEffPyEnv"
+      echo "Using Python env tarball from ${_tarvar}=${_tardir}:"
+      cat "${_PYTHON_ENV_DIR}/GEOEFF_PYENV"
+      break
+    fi
+  done
+  unset _tarvar _tardir
+fi
+
+if [ -z "${_PYTHON_ENV_DIR}" ] && [ -d "${BUNDLE_ROOT}/python_env" ]; then
   _PYTHON_ENV_DIR="${BUNDLE_ROOT}/python_env"
 fi
 
