@@ -22,9 +22,13 @@ ls -l $CONDOR_DIR_INPUT
 echo "ls -l INPUT_TAR_DIR_LOCAL: ${INPUT_TAR_DIR_LOCAL}"
 ls -l $INPUT_TAR_DIR_LOCAL
 
-if [ -e ${INPUT_TAR_DIR_LOCAL}/setupNDEff-grid.sh ]; then
-  echo "Start to run . ${INPUT_TAR_DIR_LOCAL}/setupNDEff-grid.sh"
-  . ${INPUT_TAR_DIR_LOCAL}/setupNDEff-grid.sh
+BUNDLE_DIR=${INPUT_TAR_DIR_LOCAL}/DUNE_ND_GeoEff
+INPUT_DIR=${BUNDLE_DIR}/inputs
+SETUP_SCRIPT=${BUNDLE_DIR}/scripts/grid/step1_hadron/setupNDEff-grid.sh
+
+if [ -e ${SETUP_SCRIPT} ]; then
+  echo "Start to run . ${SETUP_SCRIPT}"
+  . ${SETUP_SCRIPT}
 else
   echo "Error, setup script not found. Exiting."
   exit 1
@@ -51,14 +55,7 @@ export XRD_REDIRECTLIMIT=255
 export XRD_LOADBALANCERTTL=7200
 export XRD_STREAMTIMEOUT=14400 # may vary for your job/file type
 
-# Comment the below out!!!
-# # Make sure the output directory exists
-# ifdh ls $OUTDIR 0 # set recursion depth to 0 since we are only checking for the directory; we don't care about the full listing.
-
-if [ $? -ne 0 ]; then
-  # if ifdh ls failed, try to make the directory
-  ifdh mkdir_p $OUTDIR || { echo "Error creating or checking $OUTDIR"; exit 2; }
-fi
+ifdh mkdir_p $OUTDIR || { echo "Error creating or checking $OUTDIR"; exit 2; }
 
 echo "Finished checking outdir: $OUTDIR"
 
@@ -67,23 +64,19 @@ myinfile=""
 (( LINE_N = ${PROCESS} + 1 ))
 
 # Loop over ntuple list in txt file
-for ifile in $(cat ${INPUT_TAR_DIR_LOCAL}/myFDntuples.txt | head -${LINE_N} | tail -1); do
+for ifile in $(cat ${INPUT_DIR}/myFDntuples.txt | head -${LINE_N} | tail -1); do
   myinfile=${ifile}
 done
 
 echo "Got input file: $myinfile"
 
 # Run program
-# GEOEFF_DIR is exported by setupNDEff-grid.sh
-BIN=${GEOEFF_DIR}/build/bin
-echo "cd ${BIN}"
-cd ${BIN}
-echo "ls -l ${BIN}"
-ls -l ${BIN}
-echo "./runGeoEffFDEvtSim $myinfile"
-./runGeoEffFDEvtSim $myinfile
+echo "cd ${_CONDOR_JOB_IWD}"
+cd ${_CONDOR_JOB_IWD}
+echo "${BUNDLE_DIR}/bin/runGeoEffFDEvtSim $myinfile"
+${BUNDLE_DIR}/bin/runGeoEffFDEvtSim $myinfile
 
-echo "Finish ./runGeoEffFDEvtSim"
+echo "Finish ${BUNDLE_DIR}/bin/runGeoEffFDEvtSim"
 
 # Unique name in case we send multiple jobs.
 OUTFILE=FDHadronGeoEff_withMuTrackLengthInfo_${CLUSTER}_${PROCESS}.root
@@ -102,6 +95,9 @@ if [ -f Output_FDGeoEff.root ]; then
     echo "Error during output copyback. See output logs."
     exit $IFDH_RESULT
   fi
+else
+  echo "Error, output file not found. Exiting."
+  exit 1
 fi
 
 #If we got this far, we succeeded.
