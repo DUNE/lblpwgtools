@@ -9,10 +9,77 @@
 #
 # The step 3 apps read inputs via relative paths "data/step3/...", so run
 # them from this directory (or one containing data/step3/).
+#
+# Two ways to build:
+#   * as part of CAFAna (CAFAna/PRISM/CMakeLists.txt does add_subdirectory)
+#   * standalone, without building CAFAna (used by the grid scripts):
+#       cmake -S CAFAna/PRISM/GeoEff -B build && cmake --build build -j
+#     ROOT + Eigen are required; OscLib (OSCLIB_INC/OSCLIB_LIB) is needed for
+#     the oscillated step 3 apps, which then compile CAFAna/Analysis/Calcs.cxx
+#     directly instead of linking CAFAnaAnalysis.
 ################################################################################
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+  cmake_minimum_required(VERSION 3.14)
+  project(GeoEff LANGUAGES CXX)
+  set(GEOEFF_STANDALONE TRUE)
+
+  if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release)
+  endif()
+  set(CMAKE_CXX_STANDARD 17)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  add_compile_options(-Wall -Wextra)
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+  find_package(ROOT REQUIRED)
+  if(NOT TARGET ROOT::ROOT)
+    add_library(ROOT::ROOT INTERFACE IMPORTED)
+    set_target_properties(ROOT::ROOT PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${ROOT_INCLUDE_DIRS}"
+      INTERFACE_LINK_LIBRARIES "${ROOT_LIBRARIES}")
+  endif()
+  find_package(Eigen3 REQUIRED)
+
+  option(GEOEFF_BUILD_STEP3_OSC "Build the oscillated step 3 apps (needs OscLib)" ON)
+else()
+  set(GEOEFF_STANDALONE FALSE)
+  set(GEOEFF_BUILD_STEP3_OSC ON)
+endif()
 
 option(GEOEFF_BUILD_EDEPSIM "Build runGeoEffEDepSimBeamDir (runs ROOT MakeProject on data/step1)" OFF)
 option(GEOEFF_BUILD_PYTHON  "Build the pyGeoEff pybind11 module (needs pybind11 >= 2.10)" OFF)
+
+# ana::DefaultOscCalc etc. (CAFAna/Analysis/Calcs.cxx) for the oscillated
+# step 3 apps: link CAFAnaAnalysis inside CAFAna, compile it directly standalone.
+if(GEOEFF_BUILD_STEP3_OSC AND GEOEFF_STANDALONE)
+  get_filename_component(GEOEFF_LBLPWGTOOLS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../.. ABSOLUTE)
+  find_path(OSCLIB_INCLUDE_DIR OscLib/OscCalcPMNSOpt.h
+    HINTS $ENV{OSCLIB_INC} $ENV{OSCLIB_ROOT}/include)
+  find_library(OSCLIB_LIBRARY NAMES OscLib
+    HINTS $ENV{OSCLIB_LIB} $ENV{OSCLIB_ROOT}/lib)
+  if(OSCLIB_INCLUDE_DIR AND OSCLIB_LIBRARY
+     AND EXISTS ${GEOEFF_LBLPWGTOOLS_DIR}/CAFAna/Analysis/Calcs.cxx)
+    find_library(GSL_LIBRARY NAMES gsl HINTS $ENV{GSL_LIB} $ENV{GSL_ROOT}/lib)
+    find_library(GSL_CBLAS_LIBRARY NAMES gslcblas HINTS $ENV{GSL_LIB} $ENV{GSL_ROOT}/lib)
+    add_library(geoEffCalcs STATIC ${GEOEFF_LBLPWGTOOLS_DIR}/CAFAna/Analysis/Calcs.cxx)
+    target_include_directories(geoEffCalcs PUBLIC ${GEOEFF_LBLPWGTOOLS_DIR} ${OSCLIB_INCLUDE_DIR})
+    target_link_libraries(geoEffCalcs PUBLIC ${OSCLIB_LIBRARY} Eigen3::Eigen ROOT::ROOT)
+    if(GSL_LIBRARY AND GSL_CBLAS_LIBRARY)
+      target_link_libraries(geoEffCalcs PUBLIC ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY})
+    else()
+      message(WARNING "GSL not found; OscLib-based step 3 apps may fail to link. Set GSL_LIB.")
+    endif()
+    set(GEOEFF_CALCS_LIBS geoEffCalcs)
+  else()
+    message(WARNING "OscLib (OSCLIB_INC/OSCLIB_LIB) or CAFAna/Analysis/Calcs.cxx not found: "
+                    "building only the no-oscillation step 3 app.")
+    set(GEOEFF_BUILD_STEP3_OSC OFF)
+  endif()
+else()
+  set(GEOEFF_CALCS_LIBS CAFAnaAnalysis OscLib::All)
+endif()
 
 # --- geoEff library ----------------------------------------------------------
 add_library(geoEff SHARED src/geoEff.cpp)
@@ -61,9 +128,12 @@ endif()
 # --- Step 3: Etrim / PRISM event rates ---------------------------------------
 set(GEOEFF_STEP3_NOOSC_APPS
   NtupleOutVetoAndTrimE_AssumeEqualEffAtAllOA_NOOscSpectrumNOCAFAna_FDRateAtND)
-set(GEOEFF_STEP3_OSC_APPS
-  NtupleOutVetoAndTrimE_AssumeEqualEffAtAllOA_WithOscSpectrumNOCAFAna_FDRateAtND
-  NtupleOutVetoAndTrimE_AllOApos_WithOscSpectrumNOCAFAna_FDRateAtND)
+set(GEOEFF_STEP3_OSC_APPS)
+if(GEOEFF_BUILD_STEP3_OSC)
+  set(GEOEFF_STEP3_OSC_APPS
+    NtupleOutVetoAndTrimE_AssumeEqualEffAtAllOA_WithOscSpectrumNOCAFAna_FDRateAtND
+    NtupleOutVetoAndTrimE_AllOApos_WithOscSpectrumNOCAFAna_FDRateAtND)
+endif()
 
 foreach(app ${GEOEFF_STEP3_NOOSC_APPS} ${GEOEFF_STEP3_OSC_APPS})
   set_source_files_properties(app/${app}.C PROPERTIES LANGUAGE CXX)
@@ -73,9 +143,8 @@ foreach(app ${GEOEFF_STEP3_NOOSC_APPS} ${GEOEFF_STEP3_OSC_APPS})
   install(TARGETS ${app} DESTINATION bin)
 endforeach()
 
-# ana::DefaultOscCalc etc. come from CAFAna/Analysis/Calcs.cxx
 foreach(app ${GEOEFF_STEP3_OSC_APPS})
-  target_link_libraries(${app} CAFAnaAnalysis OscLib::All)
+  target_link_libraries(${app} ${GEOEFF_CALCS_LIBS})
 endforeach()
 
 # --- Optional python bindings ------------------------------------------------

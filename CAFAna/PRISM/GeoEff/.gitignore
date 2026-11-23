@@ -1,0 +1,21 @@
+# Standalone builds
+/build/
+/build-*/
+/app/EDepSimEvents/
+AutoDict_*
+
+# Step 2 python
+__pycache__/
+*.py[cod]
+my_python_env/
+
+# Local outputs / grid inputs
+Output_FDGeoEff.root
+Output_NDGeoEff.root
+*.tar.gz
+myFDntuples.txt
+myOutputFDGeoEffHadron.txt
+myOutputFDGeoEffMu.txt
+FDCAFs.txt
+!data/examples/FDCAFs.txt
+*.log
